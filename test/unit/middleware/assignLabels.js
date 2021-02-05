@@ -131,6 +131,61 @@ module.exports.tests.serialization = function(test, common) {
 
   });
 
+  test('support with optionnal', function(t) {
+    let withoutOptionCalls = 0;
+    let withOptionCalls = 0;
+    var assignLabels = proxyquire('../../../middleware/assignLabels', {
+      'pelias-labels': function(result, options) {
+        if(!options) {
+          withoutOptionCalls++;
+          return 'lab.el';
+        } else if (options.withOptional && result.id === 1) {
+          withOptionCalls++;
+          return 'lab.el, region 1';
+        } else if (options.withOptional && result.id === 2) {
+          withOptionCalls++;
+          return 'lab.el, region 2';
+        }
+      }
+    })();
+    var res = {
+      data: [{
+        id: 1,
+        name: {
+          default: ['lab.el']
+        }
+      },{
+        id: 2,
+        name: {
+          default: ['lab.el']
+        }
+      }]
+    };
+
+    var expected = {
+      data: [{
+        id: 1,
+        name: {
+          default: ['lab.el']
+        },
+        label: 'lab.el, region 1'
+      },{
+        id: 2,
+        name: {
+          default: ['lab.el']
+        },
+        label: 'lab.el, region 2'
+      }]
+    };
+
+    assignLabels({}, res, function () {
+      t.deepEqual(res, expected);
+      t.deepEqual(withOptionCalls, 2);
+      t.deepEqual(withoutOptionCalls, 2);
+      t.end();
+    });
+  });
+
 };
 
 module.exports.all = function (tape, common) {

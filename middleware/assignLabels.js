@@ -15,9 +15,21 @@ function assignLabel(req, res, next, labelGenerator) {
     return next();
   }
 
+  const dedupLabel = {};
+
   res.data.forEach(function (result) {
     result.label = labelGenerator(result);
+    dedupLabel[result.label] = dedupLabel[result.label] || [];
+    dedupLabel[result.label].push(result);
   });
+
+  Object.values(dedupLabel)
+    .filter(results => results.length > 1)
+    .forEach(results => {
+      results.forEach(result => {
+        result.label = labelGenerator(result, {withOptional: true});
+      });
+    });
 
   next();
 }
