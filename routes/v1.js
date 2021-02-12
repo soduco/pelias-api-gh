@@ -13,6 +13,9 @@ const middleware = requireAll(path.join(__dirname, '../middleware'));
 const controllers = requireAll(path.join(__dirname, '../controller'));
 const queries = requireAll(path.join(__dirname, '../query'));
 
+// Geohistorical imports
+const ghContrib = require('pelias-contrib-gh');
+
 // predicates that drive whether controller/search runs
 const predicates = requireAll(path.join(__dirname, '../controller/predicates'));
 predicates.hasRequestCategories = predicates.hasRequestParameter('categories');
@@ -60,6 +63,13 @@ function addRoutes(app, peliasConfig) {
     _.defaultTo(peliasConfig.api.services.libpostal, {}),
     _.property('clean.parsed_text.address'));
   const structuredLibpostalService = serviceWrapper(structuredLibpostalConfiguration);
+
+  // perform historical geocoding iif at least one bound of req.clean.window exists
+  // and there is no geographic focus 
+  const searchGeoHistoricalShouldExecute = () => any(
+    predicates.hasRequestParameter('temporal.window.start'),
+    predicates.hasRequestParameter('temporal.window.end')
+  );
 
   // fallback to coarse reverse when regular reverse didn't return anything
   const coarseReverseShouldExecute = all(
@@ -218,8 +228,10 @@ function addRoutes(app, peliasConfig) {
       controllers.libpostal(libpostalService, libpostalShouldExecute),
       controllers.placeholder(placeholderService, geometricFiltersApply, placeholderGeodisambiguationShouldExecute),
       controllers.placeholder(placeholderService, geometricFiltersApply, placeholderIdsLookupShouldExecute),
+      // Replace address search using ids with a temporal query
+      controllers.search(peliasConfig, esclient, ghContrib.query.search_geohistorical, searchGeoHistoricalShouldExecute),
       // try 3 different query types: address search using ids, cascading fallback, pelias parser
-      controllers.search(peliasConfig, esclient, queries.address_search_using_ids, searchWithIdsShouldExecute),
+      //controllers.search(peliasConfig, esclient, queries.address_search_using_ids, searchWithIdsShouldExecute),
       controllers.search(peliasConfig, esclient, queries.search, fallbackQueryShouldExecute),
       sanitizers.defer_to_pelias_parser(peliasConfig.api, shouldDeferToPeliasParser), //run additional sanitizers needed for pelias parser
       controllers.search(peliasConfig, esclient, queries.search_pelias_parser, searchPeliasParserShouldExecute),
