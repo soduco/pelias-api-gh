@@ -51,6 +51,7 @@
     "morgan": "^1.8.2",
     "pelias-compare": "^0.1.16",
     "pelias-config": "^4.0.0",
+    "pelias-contrib-gh": "^0.0.0-dev",
     "pelias-labels": "^1.13.0",
     "pelias-logger": "^1.2.0",
     "pelias-microservice-wrapper": "^1.7.0",
