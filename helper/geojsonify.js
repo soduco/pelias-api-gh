@@ -7,6 +7,8 @@ const Document = require('pelias-model').Document;
 const codec = require('pelias-model').codec;
 const field = require('./fieldValue');
 const decode_gid = require('./decode_gid');
+const linkedplaces = require('./linkedplaces');
+
 
 function geojsonifyPlaces( params, docs ){
 
@@ -64,6 +66,11 @@ function geojsonifyPlace(params, place) {
   // assign all the details info into the doc
   Object.assign(doc, collectDetails(params, place));
 
+  // Geohistorical addition : assign valid time if the document has one
+  if ( place.validtime ) {
+    doc.validtime = linkedplaces.get_interval_object(place.validtime);
+  }
+  
   // add addendum data if available
   // note: this should be the last assigned property, for aesthetic reasons.
   if (_.has(place, 'addendum')) {

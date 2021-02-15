@@ -64,13 +64,6 @@ function addRoutes(app, peliasConfig) {
     _.property('clean.parsed_text.address'));
   const structuredLibpostalService = serviceWrapper(structuredLibpostalConfiguration);
 
-  // perform historical geocoding iif at least one bound of req.clean.window exists
-  // and there is no geographic focus 
-  const searchGeoHistoricalShouldExecute = () => any(
-    predicates.hasRequestParameter('temporal.window.start'),
-    predicates.hasRequestParameter('temporal.window.end')
-  );
-
   // fallback to coarse reverse when regular reverse didn't return anything
   const coarseReverseShouldExecute = all(
     isPipServiceEnabled, not(predicates.hasRequestErrors), not(predicates.hasResponseData), not(predicates.isOnlyNonAdminLayers)
@@ -128,6 +121,14 @@ function addRoutes(app, peliasConfig) {
       // run placeholder if there are any adminareas identified
       predicates.hasParsedTextProperties.any('neighbourhood', 'borough', 'city', 'county', 'state', 'country')
     )
+  );
+
+  const searchGeoHistoricalShouldExecute = all(
+    // same as searchWithIdsShouldExecute
+    not(predicates.hasRequestErrors),
+    not(predicates.hasParsedTextProperties.any('query', 'category')),
+    predicates.isRequestLayersAnyAddressRelated,
+    predicates.hasParsedTextProperties.any('street')
   );
 
   const searchWithIdsShouldExecute = all(
@@ -228,9 +229,9 @@ function addRoutes(app, peliasConfig) {
       controllers.libpostal(libpostalService, libpostalShouldExecute),
       controllers.placeholder(placeholderService, geometricFiltersApply, placeholderGeodisambiguationShouldExecute),
       controllers.placeholder(placeholderService, geometricFiltersApply, placeholderIdsLookupShouldExecute),
+      // try 3 different query types: address search using ids, cascading fallback, pelias parser
       // Replace address search using ids with a temporal query
       controllers.search(peliasConfig, esclient, ghContrib.query.search_geohistorical, searchGeoHistoricalShouldExecute),
-      // try 3 different query types: address search using ids, cascading fallback, pelias parser
       //controllers.search(peliasConfig, esclient, queries.address_search_using_ids, searchWithIdsShouldExecute),
       controllers.search(peliasConfig, esclient, queries.search, fallbackQueryShouldExecute),
       sanitizers.defer_to_pelias_parser(peliasConfig.api, shouldDeferToPeliasParser), //run additional sanitizers needed for pelias parser

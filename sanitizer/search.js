@@ -22,8 +22,8 @@ module.exports.middleware = (_api_pelias_config) => {
         request_language: require('../sanitizer/_request_language')(),
         boundary_gid: require('../sanitizer/_boundary_gid')(),
         //historical geocoding
-        temporal_window: require('../sanitizer/_temporal_window')(),
-        temporal_scale_softness: require('../sanitizer/_temporal_scale_softness')()
+        time_window: require('../sanitizer/_time_window')(),
+        time_scale_softness: require('../sanitizer/_time_scale_softness')()
       };
 
   return ( req, res, next ) => {

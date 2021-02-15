@@ -1,14 +1,13 @@
 const _ = require('lodash');
+const vn = require('pelias-contrib-gh').query.variables_names.clean;
 
 function _sanitize( raw, clean ){
-
   var messages = { errors: [], warnings: [] };
   
   try {
     //@Todo ensure window bounds +/- scale are valid Numbers
-    sanitize_numerofdays( 'temporal.scale', clean, raw);
-
-    sanitize_softness( 'temporal.softness', clean, raw);
+    sanitize_scale(vn.time_scale, clean, raw);
+    sanitize_softness(vn.time_softness, clean, raw);
   }
   catch (err) {
     messages.errors.push( err.message );
@@ -17,7 +16,7 @@ function _sanitize( raw, clean ){
   return messages;
 }
 
-function sanitize_numerofdays( key, clean, raw){
+function sanitize_scale( key, clean, raw ){
   const parsedDays = parseInt( raw[key] );
 
   if ( _.isFinite( parsedDays ) ) {
@@ -25,20 +24,24 @@ function sanitize_numerofdays( key, clean, raw){
   }
 }
 
-function sanitize_softness( key, clean, raw){
+function sanitize_softness( key, clean, raw ){
   const parsedFloat = parseFloat( raw[key] );
 
   if ( _.isFinite( parsedFloat ) ) {
     // Force softness in [0,1]
-    const clamped = Math.min(Math.max(parsedFloat, 0.0), 1.0);
-    clean[key] = clamped;
+    clean[key] = clamp(parsedFloat);
   }
+}
+
+// @todo should go in a separate package
+function clamp(value, min=0, max=1){
+  return Math.min(Math.max(value, min), max);
 }
 
 function _expected(){
   return [
-    { name: 'temporal.softness' },
-    { name: 'temporal.scale' }
+    { name: vn.time_scale },
+    { name: vn.time_softness }
   ];
 }
 

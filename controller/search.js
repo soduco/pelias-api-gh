@@ -28,7 +28,7 @@ function setup( peliasConfig, esclient, query, should_execute ){
     // validated options from query parameters, and the `res` object, since
     // some queries use the results of previous queries to Placeholder
     const renderedQuery = query(req.clean, res);
-
+    
     // if there's no query to call ES with, skip the service
     if (_.isUndefined(renderedQuery)) {
       debugLog.push(req, 'No query to call ES with. Skipping');
