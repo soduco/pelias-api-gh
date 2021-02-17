@@ -34,7 +34,8 @@ function normalizeParentIds(place) {
       if (place[placeType] && place[placeType].length > 0 && place[placeType][0]) {
         // This is a solution for geonames hack.
         // We can store in ES the source and defaulted to wof for backward compatibility.
-        let source = _.get(place, `${placeType}_source`, ['whosonfirst']);
+        let source = _.compact(_.get(place, `${placeType}_source`));
+        source = _.isEmpty(source) ? ['whosonfirst'] : source;
 
         const placetype_ids = _.get(place, `${placeType}_gid`, [null]);
 
