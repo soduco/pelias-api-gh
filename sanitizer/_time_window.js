@@ -24,7 +24,7 @@ function _sanitize( raw, clean ){
     });
 
     // Having end < start leads to inconsistent behavior of time filters and decays.
-    if( clean[vn.time_window_start] < clean[vn.time_window_end] ) {
+    if( clean[vn.time_window_start] > clean[vn.time_window_end] ) {
       throw new Error(`${vn.time_window_end} must be greater than or equals to ${vn.time_window_start}`);
     }
   }
